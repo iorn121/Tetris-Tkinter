@@ -1,5 +1,7 @@
 from tkinter import *
 from tkinter import messagebox as msgbox
+import winsound
+import threading
 from random import randint as rnd
 
 vertical = 20  # 基盤の縦のマス数
@@ -152,7 +154,6 @@ class Move_mino:
             draw_foundation()
             draw_mino()
 
-
 def delete():
     global score
     for v in range(len(foundation)):
@@ -162,26 +163,29 @@ def delete():
             add_foundation[0], add_foundation[side + 1] = 8, 8
             foundation.insert(0, add_foundation)
             score += 1
-    # label.delete()
-    # label = Label(win, text=f"Score: {score}", font=("", 20))
-    # label.place(x=side*size//2, y=vertical*size)
-    # label.pack(anchor="center")
+            label["text"]=f"Score: {score}"
+            
 
 
 def game_over():
     top_foundation = [7 for i in range(side + 2)]
     top_foundation[0], top_foundation[side + 1] = 8, 8
     if foundation[1] != top_foundation:
-        msgbox.showinfo(message="Game Over")  # メッセージの表示
+        msgbox.showinfo(message=f"Game Over\nScore: {score}")  # メッセージの表示
         quit()  # プログラムの終了
 
 
-def main():
-    global win, cv
+
+def game():
+    print("game starting...")
+    global win, cv, label
     win = Tk()  # ウィンドウの作成
     win.title("Tetris")
     cv = Canvas(win, width=side*size, height=vertical * size+50)  # キャンバスの作成
     cv.pack()  # オブジェクト配置のオプション
+    label = Label(win, text=f"Score: {score}", font=("", 20))
+    label.place(x=side*size//2, y=vertical*size)
+    label.pack(anchor="center")
     create_mino()
     left = Move_mino(0, -1, 0)
     right = Move_mino(0, 1, 0)
@@ -195,7 +199,26 @@ def main():
     win.bind("<Down>", left_spin.spin_mino)  # 下キーが押されたら左回転
     under.drop_mino()
     win.mainloop()
+    print("game exit")
 
 
+
+class MySound(threading.Thread):
+    def __init__(self,file):
+        super().__init__()
+        self._file = file
+    def run(self):
+        print("play...")
+        winsound.PlaySound(self._file,winsound.SND_FILENAME|winsound.SND_ASYNC|winsound.SND_LOOP)
+    
+
+
+def main():
+    t1=threading.Thread(target=game)
+    t2=MySound("bgm.wav")
+    t1.start()
+    t2.start()
+    t1.join()
+    print("main returned")
 if __name__ == "__main__":
     main()
